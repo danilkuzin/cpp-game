@@ -36,5 +36,5 @@ without a window. CI enforces it.
 ## Licence
 
 MIT, see `LICENSE`. SDL3 and SDL_ttf are zlib-licensed, GoogleTest is BSD-3-Clause, nlohmann/json is
-MIT; none of them are vendored here. `assets/Roboto-Regular.ttf` is Apache-2.0, see
+MIT; none of them are vendored here. `assets/Roboto-Regular.ttf` is under the SIL Open Font License 1.1, see
 `assets/Roboto-Regular.LICENSE.txt`.
