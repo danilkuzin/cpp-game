@@ -9,7 +9,6 @@
 #include "Location.h"
 #include "Registry.h"
 #include <algorithm>
-#include <cstddef>
 #include <optional>
 #include <string>
 #include <vector>
