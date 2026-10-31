@@ -1,0 +1,16 @@
+{
+  "map": {
+    "width": 48,
+    "height": 48,
+    "max_level": 1,
+    "border_size": 4
+  },
+  "camera": {
+    "width": 8,
+    "height": 8,
+    "scroll_delta": 3
+  },
+  "monsters": {
+    "start_num": 50
+  }
+}

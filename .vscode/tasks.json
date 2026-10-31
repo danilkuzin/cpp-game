@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "cmake --build --preset debug",
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "ctest --preset debug --output-on-failure",
+            "group": { "kind": "test", "isDefault": true },
+            "problemMatcher": []
+        },
+        {
+            "label": "format",
+            "type": "shell",
+            "command": "git ls-files '*.cpp' '*.h' | xargs clang-format -i",
+            "problemMatcher": []
+        }
+    ]
+}

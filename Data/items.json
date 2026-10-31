@@ -1,0 +1,220 @@
+{
+    "items": [
+        {
+            "id": "axe_standard",
+            "name": "Axe",
+            "sprite_name": "axe.bmp",
+            "size": 2,
+            "equippable": {
+                "slots": [
+                    "MainHand",
+                    "OffHand"
+                ]
+            },
+            "melee": {
+                "damage": {
+                    "dice": 1,
+                    "sides": 6
+                }
+            },
+            "value": {
+                "base_price": 10
+            }
+        },
+        {
+            "id": "sword_standard",
+            "name": "Sword",
+            "sprite_name": "sword.bmp",
+            "size": 2,
+            "equippable": {
+                "slots": [
+                    "MainHand",
+                    "OffHand"
+                ]
+            },
+            "melee": {
+                "damage": {
+                    "dice": 2,
+                    "sides": 4
+                }
+            },
+            "value": {
+                "base_price": 20
+            }
+        },
+        {
+            "id": "helm_iron",
+            "name": "Helm",
+            "sprite_name": "helm.bmp",
+            "size": 1,
+            "equippable": {
+                "slots": [
+                    "Head"
+                ]
+            },
+            "armor": {
+                "defence": 1
+            },
+            "value": {
+                "base_price": 10
+            }
+        },
+        {
+            "id": "bodyarmor_iron",
+            "name": "Bodyarmor",
+            "sprite_name": "bodyarmor.bmp",
+            "size": 3,
+            "equippable": {
+                "slots": [
+                    "Chest"
+                ]
+            },
+            "armor": {
+                "defence": 5
+            },
+            "value": {
+                "base_price": 20
+            }
+        },
+        {
+            "id": "shield_wood",
+            "name": "Shield",
+            "sprite_name": "shield.bmp",
+            "size": 2,
+            "equippable": {
+                "slots": [
+                    "OffHand"
+                ]
+            },
+            "armor": {
+                "defence": 2
+            },
+            "value": {
+                "base_price": 15
+            }
+        },
+        {
+            "id": "ring_iron",
+            "name": "Iron Ring",
+            "sprite_name": "ring.bmp",
+            "size": 0,
+            "equippable": {
+                "slots": [
+                    "AnyRing"
+                ]
+            },
+            "armor": {
+                "defence": 1
+            },
+            "value": {
+                "base_price": 15
+            }
+        },
+        {
+            "id": "ammo_arrows",
+            "name": "Ammo",
+            "sprite_name": "ammo.bmp",
+            "size": 1,
+            "ammo": {
+                "num_per_bag": 15
+            },
+            "value": {
+                "base_price": 1
+            }
+        },
+        {
+            "id": "crossbow_standard",
+            "name": "CrossBow",
+            "sprite_name": "cross.bmp",
+            "size": 2,
+            "equippable": {
+                "slots": [
+                    "MainHand",
+                    "OffHand"
+                ]
+            },
+            "ranged": {
+                "damage": {
+                    "dice": 1,
+                    "sides": 4
+                },
+                "range": 5,
+                "max_ammo": 20
+            },
+            "value": {
+                "base_price": 10
+            }
+        },
+        {
+            "id": "crystal_fireball",
+            "name": "Fireball Crystal",
+            "sprite_name": "magic_item.bmp",
+            "size": 1,
+            "magic": {
+                "spell_id": "fireball",
+                "max_charges": 1
+            },
+            "value": {
+                "base_price": 10
+            }
+        },
+        {
+            "id": "potion_healing",
+            "name": "Healing Potion",
+            "sprite_name": "magic_item.bmp",
+            "size": 1,
+            "magic": {
+                "spell_id": "healing_light",
+                "max_charges": 1
+            },
+            "value": {
+                "base_price": 10
+            }
+        },
+        {
+            "id": "staff_firestorm",
+            "name": "Firestorm Staff",
+            "sprite_name": "magic_item.bmp",
+            "size": 2,
+            "equippable": {
+                "slots": [
+                    "MainHand",
+                    "OffHand"
+                ]
+            },
+            "magic": {
+                "spell_id": "fireball",
+                "max_charges": 5
+            },
+            "value": {
+                "base_price": 50
+            }
+        },
+        {
+            "id": "staff_healing",
+            "name": "Healing Staff",
+            "sprite_name": "magic_item.bmp",
+            "size": 2,
+            "equippable": {
+                "slots": [
+                    "MainHand",
+                    "OffHand"
+                ]
+            },
+            "magic": {
+                "spell_id": "healing_light",
+                "max_charges": 10
+            },
+            "value": {
+                "base_price": 50
+            }
+        },
+        {
+            "id": "copper",
+            "name": "Copper",
+            "sprite_name": "copper.bmp",
+            "size": 0,
+            "currency": {}
+        }
+    ]
+}

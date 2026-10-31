@@ -1,0 +1,20 @@
+{
+    "spells": [
+        {
+            "id": "fireball",
+            "name": "Fireball",
+            "mana_cost": 1,
+            "damage": {
+                "amount": 4
+            }
+        },
+        {
+            "id": "healing_light",
+            "name": "Healing Light",
+            "mana_cost": 1,
+            "healing": {
+                "amount": 4
+            }
+        }
+    ]
+}

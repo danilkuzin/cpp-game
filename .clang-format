@@ -1,0 +1,10 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 100
+AllowShortIfStatementsOnASingleLine: false
+QualifierAlignment: Left
+AccessModifierOffset: -4
+InsertBraces: true
+InsertNewlineAtEOF: true
+Standard: c++20
+SeparateDefinitionBlocks: Always

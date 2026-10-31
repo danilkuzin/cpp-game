@@ -1,0 +1,133 @@
+{
+    "npcs": [
+        {
+            "id": "Rat",
+            "name": "STR_MONSTER1",
+            "max_hp": 1,
+            "map_level": 0,
+            "attributes": {
+                "str": 1,
+                "dex": 1,
+                "iq": 0,
+                "wis": 0,
+                "cha": 0
+            },
+            "view_zone": 4,
+            "move_distance": 3,
+            "tile": "rat.bmp"
+        },
+        {
+            "id": "wolf",
+            "name": "STR_MONSTER2",
+            "max_hp": 2,
+            "map_level": 0,
+            "attributes": {
+                "str": 2,
+                "dex": 3,
+                "iq": 0,
+                "wis": 0,
+                "cha": 0
+            },
+            "view_zone": 3,
+            "move_distance": 4,
+            "tile": "wolf.bmp"
+        },
+        {
+            "id": "giant_spider",
+            "name": "STR_MONSTER3",
+            "max_hp": 5,
+            "map_level": 0,
+            "attributes": {
+                "str": 2,
+                "dex": 5,
+                "iq": 0,
+                "wis": 0,
+                "cha": 0
+            },
+            "view_zone": 4,
+            "move_distance": 5,
+            "tile": "giant_spider.bmp"
+        },
+        {
+            "id": "skeleton",
+            "name": "STR_MONSTER4",
+            "max_hp": 9,
+            "map_level": 0,
+            "attributes": {
+                "str": 3,
+                "dex": 3,
+                "iq": 0,
+                "wis": 0,
+                "cha": 0
+            },
+            "view_zone": 3,
+            "move_distance": 5,
+            "tile": "skeleton.bmp"
+        },
+        {
+            "id": "orc",
+            "name": "STR_MONSTER5",
+            "max_hp": 12,
+            "map_level": 0,
+            "attributes": {
+                "str": 5,
+                "dex": 2,
+                "iq": 0,
+                "wis": 0,
+                "cha": 0
+            },
+            "view_zone": 3,
+            "move_distance": 4,
+            "tile": "orc.bmp"
+        },
+        {
+            "id": "troll",
+            "name": "STR_MONSTER6",
+            "max_hp": 20,
+            "map_level": 0,
+            "attributes": {
+                "str": 7,
+                "dex": 1,
+                "iq": 0,
+                "wis": 0,
+                "cha": 0
+            },
+            "view_zone": 4,
+            "move_distance": 4,
+            "tile": "troll.bmp"
+        },
+        {
+            "id": "giant_snake",
+            "name": "STR_MONSTER7",
+            "max_hp": 35,
+            "map_level": 0,
+            "attributes": {
+                "str": 5,
+                "dex": 6,
+                "iq": 0,
+                "wis": 0,
+                "cha": 0
+            },
+            "view_zone": 5,
+            "move_distance": 3,
+            "tile": "giant_snake.bmp"
+        },
+        {
+            "id": "shopkeeper",
+            "name": "STR_SHOPKEEPER",
+            "max_hp": 35,
+            "map_level": 3,
+            "attributes": {
+                "str": 0,
+                "dex": 0,
+                "iq": 0,
+                "wis": 0,
+                "cha": 5
+            },
+            "view_zone": 5,
+            "move_distance": 3,
+            "tile": "shopkeeper.bmp",
+            "shopkeeper": {}
+        }
+    ]
+}

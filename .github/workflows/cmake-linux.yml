@@ -1,0 +1,64 @@
+name: Linux CMake Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential git make \
+        pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
+        libaudio-dev libfribidi-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
+        libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+        libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+        libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev libthai-dev \
+        libfreetype6-dev \
+        clang-tidy
+
+    - name: Cache FetchContent dependencies
+      uses: actions/cache@v4
+      with:
+        path: build/_deps
+        key: deps-${{ runner.os }}-${{ hashFiles('CMakeLists.txt') }}
+
+    # Configure (uses your preset)
+    - name: Configure (Debug)
+      run: cmake --preset debug
+
+    # Build (uses your preset)
+    - name: Build
+      run: cmake --build --preset debug
+
+    # Run tests (GoogleTest)
+    - name: Test
+      run: ctest --preset debug --output-on-failure
+
+    - name: Install pinned clang-format
+      run: |
+        pipx install clang-format
+        clang-format --version
+
+    - name: Check formatting
+      run: |
+        git ls-files -z '*.cpp' '*.h' | xargs -r -0 clang-format --dry-run --Werror
+
+    - name: Domain, Core and Ui must not include SDL
+      run: |
+        if git ls-files -z 'Domain/*' 'Core/*' 'Ui/*' | xargs -r -0 grep -l SDL; then
+          echo "SDL leaked into Domain/, Core/ or Ui/"; exit 1
+        fi

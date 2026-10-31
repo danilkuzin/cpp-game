@@ -1,0 +1,14 @@
+{
+    "editor.formatOnSave": true,
+    "C_Cpp.clang_format_style": "file",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+    "C_Cpp.default.cppStandard": "c++23",
+    "cmake.configurePreset": "debug",
+    "cmake.buildPreset": "debug",
+    "cmake.testPreset": "debug",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.parallelJobs": 0,
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "[cpp]": { "editor.defaultFormatter": "ms-vscode.cpptools" }
+}

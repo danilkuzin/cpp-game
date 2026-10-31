@@ -1,0 +1,40 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Game",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "cwd": "${command:cmake.launchTargetDirectory}",
+            "stopAtEntry": false,
+            "MIMode": "gdb",
+            "osx": {
+                "MIMode": "lldb"
+            },
+            "environment": [
+                {
+                    "name": "UBSAN_OPTIONS",
+                    "value": "print_stacktrace=1:halt_on_error=1"
+                },
+                {
+                    "name": "ASAN_OPTIONS",
+                    "value": "abort_on_error=1"
+                }
+            ]
+        },
+        {
+            "name": "Debug UnitTests",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/UnitTests",
+            "args": [],
+            "cwd": "${workspaceFolder}/build/Debug",
+            "stopAtEntry": false,
+            "MIMode": "gdb",
+            "osx": {
+                "MIMode": "lldb"
+            }
+        }
+    ]
+}

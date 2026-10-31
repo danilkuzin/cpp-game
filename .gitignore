@@ -1,0 +1,50 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+
+build/
+build-release/
+cmake-build-debug/
+
+.vscode/c_cpp_properties.json
+.idea/*
+
+compile_commands.json
+
+docs/output/
+.cache/
+Testing/
+_deps/
+
+.DS_Store
+*.dSYM/
