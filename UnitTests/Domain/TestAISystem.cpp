@@ -1,6 +1,8 @@
+#include "Components.h"
 #include "EntityFactory.h"
 #include "Hero.h"
 #include "Monster.h"
+#include "Support/Fixtures.h"
 #include "Support/MakeRegistry.h"
 #include "Systems.h"
 #include "Vector2Int.h"
@@ -74,4 +76,20 @@ TEST(AISystem, ShopkeeperInViewDoesNotMove) {
     systems::MovementSystem(registry);
 
     EXPECT_EQ(registry.Storage<Location>().Get(shopkeeper)->coord, (Vector2Int{.x = 5, .y = 8}));
+}
+
+TEST(AISystem, ViewZoneCountsCardinalSteps) {
+    auto registry = MakeTestRegistry();
+    MakeHeroAt(registry, {.x = 5, .y = 5});
+    auto three_steps = MakeCreatureAt(registry, {.coord = {.x = 7, .y = 6}, .map_level = 0},
+                                      /*hp=*/1, /*is_monster=*/true);
+    auto four_steps = MakeCreatureAt(registry, {.coord = {.x = 7, .y = 7}, .map_level = 0},
+                                     /*hp=*/1, /*is_monster=*/true);
+    registry.Storage<component::VisionComponent>().Add(three_steps, {.view_zone = 3});
+    registry.Storage<component::VisionComponent>().Add(four_steps, {.view_zone = 3});
+
+    systems::AISystem(registry);
+
+    EXPECT_TRUE(registry.Storage<component::IntentToMove>().Has(three_steps));
+    EXPECT_FALSE(registry.Storage<component::IntentToMove>().Has(four_steps));
 }

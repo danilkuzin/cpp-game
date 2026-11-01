@@ -17,6 +17,8 @@ std::vector<entity::EntityId> EntitiesAt(const domain::Registry &registry, Locat
 std::optional<entity::EntityId> BlockingEntityIdAt(const domain::Registry &registry, Location loc);
 bool BlockingEntityAt(const domain::Registry &registry, Location loc);
 bool TileIsEmpty(const domain::Registry &registry, Location loc);
+bool PassableTerrainAt(const domain::Registry &registry, Location loc);
+bool IsPassableAndUnoccupied(const domain::Registry &registry, Location loc);
 // Order of pick up is not specified
 std::optional<entity::EntityId> ItemIdAt(const domain::Registry &registry, Location loc);
 bool AreEnemies(const domain::Registry &registry, entity::EntityId a, entity::EntityId b);

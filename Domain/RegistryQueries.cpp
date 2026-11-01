@@ -16,14 +16,6 @@
 namespace systems {
 namespace {
 constexpr int kMaxPlacementSampleAttempts = 10;
-
-bool IsPassableAndUnoccupied(const map::Map &map, Vector2Int candidate,
-                             const domain::Registry &registry, int map_level) {
-    if (!registry.terrain_registry.IsPassable(map.At(candidate).terrain_id)) {
-        return false;
-    }
-    return TileIsEmpty(registry, {.coord = candidate, .map_level = map_level});
-}
 } // namespace
 
 std::vector<entity::EntityId> EntitiesAt(const domain::Registry &registry, Location loc) {
@@ -52,6 +44,20 @@ bool BlockingEntityAt(const domain::Registry &registry, Location loc) {
 
 bool TileIsEmpty(const domain::Registry &registry, Location loc) {
     return EntitiesAt(registry, loc).empty();
+}
+
+bool PassableTerrainAt(const domain::Registry &registry, Location loc) {
+    const auto &map = registry.maps[loc.map_level];
+    if (!map.Contains(loc.coord)) {
+        return false;
+    }
+    const auto &cell = map.At(loc.coord);
+
+    return registry.terrain_registry.IsPassable(cell.terrain_id);
+}
+
+bool IsPassableAndUnoccupied(const domain::Registry &registry, const Location loc) {
+    return PassableTerrainAt(registry, loc) && TileIsEmpty(registry, loc);
 }
 
 std::optional<entity::EntityId> ItemIdAt(const domain::Registry &registry, Location loc) {
@@ -102,20 +108,15 @@ const map::Map *PlayerMap(const domain::Registry &registry) {
 std::vector<Vector2Int> SpellRayTiles(const domain::Registry &registry, entity::EntityId caster,
                                       Vector2Int direction) {
     const auto &caster_loc = registry.GetRef<Location>(caster);
-    const auto &map = registry.maps[caster_loc.map_level];
     std::vector<Vector2Int> tiles;
     for (int i = 1; i <= kSpellRange; i++) {
-        auto check_coord = caster_loc.coord + direction * i;
-        if (!map.Contains(check_coord)) {
-            break;
-        }
-        if (!registry.terrain_registry.IsPassable(map.At(check_coord).terrain_id)) {
+        auto check_loc = caster_loc + direction * i;
+        if (!PassableTerrainAt(registry, check_loc)) {
             break;
         }
 
-        tiles.push_back(check_coord);
-        auto body =
-            BlockingEntityIdAt(registry, {.coord = check_coord, .map_level = caster_loc.map_level});
+        tiles.push_back(check_loc.coord);
+        auto body = BlockingEntityIdAt(registry, check_loc);
         if (body.has_value()) {
             break; // the body's own tile is included: a spell that lands here still hits it
         }
@@ -128,12 +129,12 @@ std::optional<Vector2Int> UnoccupiedPointAtArea(const domain::Registry &registry
     if (area.width <= 0 || area.height <= 0) {
         return std::nullopt;
     }
-    const auto &map = registry.maps[map_level];
 
     for (int attempt = 0; attempt < kMaxPlacementSampleAttempts; attempt++) {
         const Vector2Int candidate = {.x = area.x + roll::Index(area.width),
                                       .y = area.y + roll::Index(area.height)};
-        if (IsPassableAndUnoccupied(map, candidate, registry, map_level)) {
+        const Location loc = {.coord = candidate, .map_level = map_level};
+        if (IsPassableAndUnoccupied(registry, loc)) {
             return candidate;
         }
     }
@@ -141,7 +142,8 @@ std::optional<Vector2Int> UnoccupiedPointAtArea(const domain::Registry &registry
     for (int x = area.x; x < area.x + area.width; x++) {
         for (int y = area.y; y < area.y + area.height; y++) {
             const Vector2Int candidate = {.x = x, .y = y};
-            if (IsPassableAndUnoccupied(map, candidate, registry, map_level)) {
+            const Location loc = {.coord = candidate, .map_level = map_level};
+            if (IsPassableAndUnoccupied(registry, loc)) {
                 return candidate;
             }
         }

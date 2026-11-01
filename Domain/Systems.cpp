@@ -84,19 +84,13 @@ namespace {
 std::optional<entity::EntityId> FindEnemyAlongRay(const domain::Registry &registry,
                                                   entity::EntityId attacker, Location origin,
                                                   Vector2Int direction, int range) {
-    const auto &map = registry.maps[origin.map_level];
-
     for (int i = 1; i <= range; i++) {
-        auto check_coord = origin.coord + direction * i;
-        if (!map.Contains(check_coord)) {
-            break;
-        }
-        if (!registry.terrain_registry.IsPassable(map.At(check_coord).terrain_id)) {
+        auto check_loc = origin + direction * i;
+        if (!PassableTerrainAt(registry, check_loc)) {
             break;
         }
 
-        auto body =
-            BlockingEntityIdAt(registry, {.coord = check_coord, .map_level = origin.map_level});
+        auto body = BlockingEntityIdAt(registry, check_loc);
         if (!body.has_value()) {
             continue;
         }
@@ -289,26 +283,23 @@ event::Result MovementSystem(domain::Registry &registry) {
         auto &intent = registry.GetRef<component::IntentToMove>(id);
         const auto &location = registry.GetRef<Location>(id);
 
-        auto new_coord = location.coord + intent.dcoord;
-        const int map_level = location.map_level;
-        auto &map = registry.maps[map_level];
+        auto &map = registry.maps[location.map_level];
 
         bool moved = false;
-        if (map.Contains(new_coord) &&
-            registry.terrain_registry.IsPassable(map.At(new_coord).terrain_id)) {
-            const Location new_loc = {.coord = new_coord, .map_level = map_level};
-            if (!BlockingEntityAt(registry, new_loc)) {
-                registry.PlaceEntity(id, new_loc);
-                moved = true;
+        const Location new_loc = location + intent.dcoord;
 
-                if (registry.Storage<component::PlayerTag>().Has(id)) {
-                    auto &vision = registry.GetRef<component::VisionComponent>(id);
-                    map.SetAreaVisible(hero::GetVisibleArea(new_loc, vision.view_zone));
-                }
-                ResolveTrapEncounter(registry, result, id, new_loc);
-                ResolveHealingSource(registry, id, new_loc);
+        if (PassableTerrainAt(registry, new_loc) && !BlockingEntityAt(registry, new_loc)) {
+            registry.PlaceEntity(id, new_loc);
+            moved = true;
+
+            if (registry.Storage<component::PlayerTag>().Has(id)) {
+                auto &vision = registry.GetRef<component::VisionComponent>(id);
+                map.SetAreaVisible(hero::GetVisibleArea(new_loc, vision.view_zone));
             }
+            ResolveTrapEncounter(registry, result, id, new_loc);
+            ResolveHealingSource(registry, id, new_loc);
         }
+
         if (!moved && registry.Storage<component::PlayerTag>().Has(id)) {
             result.events.push_back(event::Event{.type = event::Type::Blocked, .attacker = id});
         }
@@ -362,10 +353,7 @@ event::Result CollisionSystem(domain::Registry &registry) {
         auto &intent = registry.GetRef<component::IntentToMove>(id);
         auto &location = registry.GetRef<Location>(id);
 
-        auto new_coord = location.coord + intent.dcoord;
-
-        auto target_entities =
-            EntitiesAt(registry, {.coord = new_coord, .map_level = location.map_level});
+        auto target_entities = EntitiesAt(registry, location + intent.dcoord);
         for (auto target_entity : target_entities) {
             if (registry.Storage<component::ShopkeeperTag>().Has(target_entity) &&
                 registry.Storage<component::PlayerTag>().Has(id)) {

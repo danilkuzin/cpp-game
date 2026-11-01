@@ -98,7 +98,7 @@ void WorldGenerator::GenerateTileFeatures(Registry &registry) {
         for (int x = 0; x < map.Width(); x++) {
             for (int y = 0; y < map.Height(); y++) {
                 const Location loc = {.coord = {.x = x, .y = y}, .map_level = map_level};
-                if (!registry.terrain_registry.IsPassable(map.At(loc.coord).terrain_id)) {
+                if (!systems::PassableTerrainAt(registry, loc)) {
                     continue;
                 }
                 if (!roll::Chance(kObjectChancePercent)) {
@@ -132,8 +132,7 @@ void WorldGenerator::GenerateItems(Registry &registry, database::GameDatabase &d
         for (int x = 0; x < map.Width(); x++) {
             for (int y = 0; y < map.Height(); y++) {
                 const Location loc = {.coord = {.x = x, .y = y}, .map_level = map_level};
-                if (!registry.terrain_registry.IsPassable(map.At(loc.coord).terrain_id) ||
-                    !systems::TileIsEmpty(registry, loc)) {
+                if (!systems::IsPassableAndUnoccupied(registry, loc)) {
                     continue;
                 }
                 if (roll::Chance(kItemChancePercent)) {

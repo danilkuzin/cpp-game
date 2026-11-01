@@ -95,3 +95,29 @@ TEST(TileIsEmpty, GetUnoccupiedPointRefusesTilesHoldingTileFeatures) {
 
     EXPECT_FALSE(systems::UnoccupiedPoint(registry, /*map_level=*/0).has_value());
 }
+
+TEST(PassableTerrainAt, TrueForOpenGround) {
+    auto registry = MakeTestRegistry();
+    EXPECT_TRUE(systems::PassableTerrainAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}));
+}
+
+TEST(PassableTerrainAt, FalseForImpassableTerrain) {
+    auto registry = MakeTestRegistry();
+    registry.maps[0].At({.x = 5, .y = 5}).terrain_id = 4;
+    EXPECT_FALSE(systems::PassableTerrainAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}));
+}
+
+TEST(PassableTerrainAt, FalseOutsideTheMap) {
+    auto registry = MakeTestRegistry();
+    EXPECT_FALSE(
+        systems::PassableTerrainAt(registry, {.coord = {.x = -1, .y = 5}, .map_level = 0}));
+    EXPECT_FALSE(
+        systems::PassableTerrainAt(registry, {.coord = {.x = 10, .y = 5}, .map_level = 0}));
+}
+
+TEST(PassableTerrainAt, IgnoresCreaturesStandingThere) {
+    auto registry = MakeTestRegistry();
+    MakeCreatureAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, /*hp=*/5,
+                   /*is_monster=*/true);
+    EXPECT_TRUE(systems::PassableTerrainAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}));
+}

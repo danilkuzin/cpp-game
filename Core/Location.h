@@ -9,6 +9,7 @@ struct Location {
     int map_level = 0;
 
     bool operator==(const Location &other) const;
+    Location operator+(Vector2Int offset) const;
 };
 
 template <> struct std::hash<Location> {
