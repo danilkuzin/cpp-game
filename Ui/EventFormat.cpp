@@ -36,12 +36,6 @@ std::string WithDefender(const std::string &label, const domain::Registry &regis
     return label + ", defender: " + NameOf(registry, *defender);
 }
 
-std::string WithAttacker(const std::string &label, const domain::Registry &registry,
-                         std::optional<entity::EntityId> attacker) {
-    assert(attacker.has_value());
-    return label + ", attacker: " + NameOf(registry, *attacker);
-}
-
 std::string FormatMonsterSlained(const event::Event &event) {
     assert(event.defender_name.has_value());
     return texts::StrMonKill() +
@@ -107,7 +101,7 @@ std::string FormatEvent(const event::Event &event, const domain::Registry &regis
         return WithAttackerAndDefender(texts::StrMonStop(), registry, event.attacker,
                                        event.defender);
     case event::Type::Blocked:
-        return WithAttacker(texts::StrBlocked(), registry, event.attacker);
+        return texts::StrBlocked();
     default:
         return "No handler for event";
     }

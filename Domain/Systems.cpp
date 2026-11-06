@@ -9,13 +9,13 @@
 #include "Leveling.h"
 #include "Location.h"
 #include "Map.h"
+#include "Navigation.h"
 #include "Registry.h"
 #include "RegistryQueries.h"
 #include "Roll.h"
 #include "Tables.h"
 #include "Vector2Int.h"
 #include <algorithm>
-#include <array>
 #include <cstddef>
 #include <optional>
 #include <utility>
@@ -69,9 +69,7 @@ event::Result MeleeSystem(domain::Registry &registry) {
         auto weapon = combat::EffectiveMelee(registry, entity_id);
         auto armor = combat::EffectiveArmor(registry, intent.target_entity_id);
         auto damage = combat::ResolveMelee(attacker_attr, weapon, *target_attr, armor);
-        if (damage > 0) {
-            StampDamage(registry, result, entity_id, intent.target_entity_id, damage);
-        }
+        StampDamage(registry, result, entity_id, intent.target_entity_id, damage);
     }
 
     registry.Storage<component::IntentToMelee>().Clear();
@@ -103,12 +101,10 @@ std::optional<entity::EntityId> FindEnemyAlongRay(const domain::Registry &regist
 std::optional<std::pair<entity::EntityId, Vector2Int>>
 FindNearestEnemyAlongCardinalRays(const domain::Registry &registry, entity::EntityId attacker,
                                   Location origin, int range) {
-    static const std::array<Vector2Int, 4> kDirections{Vector2Int::Up(), Vector2Int::Right(),
-                                                       Vector2Int::Down(), Vector2Int::Left()};
     std::optional<std::pair<entity::EntityId, Vector2Int>> best;
     int best_distance = range + 1;
 
-    for (auto direction : kDirections) {
+    for (auto direction : Vector2Int::Cardinals()) {
         auto target = FindEnemyAlongRay(registry, attacker, origin, direction, range);
         if (!target.has_value()) {
             continue;
@@ -162,9 +158,7 @@ event::Result RangedSystem(domain::Registry &registry) {
                 if (target_attr != nullptr) {
                     auto armor = combat::EffectiveArmor(registry, *target);
                     auto damage = combat::ResolveRanged(attacker_attr, weapon, *target_attr, armor);
-                    if (damage > 0) {
-                        StampDamage(registry, result, entity_id, *target, damage);
-                    }
+                    StampDamage(registry, result, entity_id, *target, damage);
                 }
             }
         }
@@ -288,16 +282,16 @@ event::Result MovementSystem(domain::Registry &registry) {
         bool moved = false;
         const Location new_loc = location + intent.dcoord;
 
-        if (PassableTerrainAt(registry, new_loc) && !BlockingEntityAt(registry, new_loc)) {
+        if (CanEnter(registry, new_loc)) {
             registry.PlaceEntity(id, new_loc);
             moved = true;
 
             if (registry.Storage<component::PlayerTag>().Has(id)) {
                 auto &vision = registry.GetRef<component::VisionComponent>(id);
                 map.SetAreaVisible(hero::GetVisibleArea(new_loc, vision.view_zone));
+                ResolveTrapEncounter(registry, result, id, new_loc);
+                ResolveHealingSource(registry, id, new_loc);
             }
-            ResolveTrapEncounter(registry, result, id, new_loc);
-            ResolveHealingSource(registry, id, new_loc);
         }
 
         if (!moved && registry.Storage<component::PlayerTag>().Has(id)) {
@@ -316,6 +310,7 @@ void AISystem(domain::Registry &registry) {
 
     const auto &hero_loc = registry.GetRef<Location>(hero_id.value());
 
+    auto dmap = BuildDistanceMap(registry, hero_loc);
     for (auto id : registry.View<component::MonsterTag, Location, component::VisionComponent>()) {
         if (registry.Storage<component::ShopkeeperTag>().Has(id)) {
             continue;
@@ -329,21 +324,30 @@ void AISystem(domain::Registry &registry) {
         if (monster_loc.coord.DistanceTo(hero_loc.coord) > monster_vision.view_zone) {
             continue;
         }
-
-        auto d_x = combat::Sgn(hero_loc.coord.x - monster_loc.coord.x);
-        auto d_y = combat::Sgn(hero_loc.coord.y - monster_loc.coord.y);
-        if (d_x == 0 && d_y == 0) {
-            continue;
-        }
-
-        if (d_x != 0 && d_y != 0) {
-            if (roll::Index(2) == 0) {
-                d_y = 0;
-            } else {
-                d_x = 0;
+        std::vector<Vector2Int> best_directions = {};
+        int best_potential_distance = 0;
+        for (auto cardinal : Vector2Int::Cardinals()) {
+            auto candidate_distance = dmap.At(monster_loc.coord + cardinal);
+            if (!candidate_distance.has_value()) {
+                continue;
+            }
+            if (best_directions.empty() || *candidate_distance < best_potential_distance) {
+                best_directions.clear();
+                best_directions.push_back(cardinal);
+                best_potential_distance = *candidate_distance;
+            } else if (*candidate_distance == best_potential_distance) {
+                best_directions.push_back(cardinal);
             }
         }
-        registry.Storage<component::IntentToMove>().Add(id, {.dcoord = {.x = d_x, .y = d_y}});
+        if (!best_directions.empty()) {
+            auto chosen_dir = best_directions[0];
+            auto num_candidate_directions = best_directions.size();
+            if (num_candidate_directions > 1) {
+                chosen_dir =
+                    best_directions[roll::Index(static_cast<int>(num_candidate_directions))];
+            }
+            registry.Storage<component::IntentToMove>().Add(id, {.dcoord = chosen_dir});
+        }
     }
 }
 

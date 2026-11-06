@@ -9,6 +9,7 @@ add_library(domain STATIC
         Hero.cpp
         Leveling.cpp
         Map.cpp
+        Navigation.cpp
         RegistryQueries.cpp
         Roll.cpp
         Systems.cpp

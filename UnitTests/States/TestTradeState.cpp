@@ -38,7 +38,7 @@ entity::EntityId MakeNamedPricedItem(domain::Registry &registry, entity::EntityI
 
 TEST(TradeState, LeftClickOnAHeroItemRowSellsThatItem) {
     auto session = MakeTestSession();
-    auto hero_id = MakeHeroWithCha(session, /*cha=*/100);
+    auto hero_id = MakeHeroWithCha(session, 100);
     auto shopkeeper_id = session.registry.entities.CreateEntity();
     session.registry.Storage<component::PurseComponent>().Add(shopkeeper_id, {.money = 1000});
     auto item_id = MakeNamedPricedItem(session.registry, hero_id, "Dagger", 100);
@@ -62,7 +62,7 @@ TEST(TradeState, LeftClickOnAHeroItemRowSellsThatItem) {
 
 TEST(TradeState, LeftClickOnAShopItemRowBuysThatItem) {
     auto session = MakeTestSession();
-    auto hero_id = MakeHeroWithCha(session, /*cha=*/100);
+    auto hero_id = MakeHeroWithCha(session, 100);
     session.registry.Storage<component::PurseComponent>().Add(hero_id, {.money = 1000});
     for (int i = 0; i < 7; ++i) {
         MakeNamedPricedItem(session.registry, hero_id, "Junk", 1);
@@ -90,7 +90,7 @@ TEST(TradeState, LeftClickOnAShopItemRowBuysThatItem) {
 
 TEST(TradeState, RightClickOnAShopRowDoesNothing) {
     auto session = MakeTestSession();
-    auto hero_id = MakeHeroWithCha(session, /*cha=*/100);
+    auto hero_id = MakeHeroWithCha(session, 100);
     session.registry.Storage<component::PurseComponent>().Add(hero_id, {.money = 1000});
     auto shopkeeper_id = session.registry.entities.CreateEntity();
     auto item_id = MakeNamedPricedItem(session.registry, shopkeeper_id, "Sword", 100);
@@ -113,7 +113,7 @@ TEST(TradeState, RightClickOnAShopRowDoesNothing) {
 
 TEST(TradeState, FailedBuyLogsAndChangesNothing) {
     auto session = MakeTestSession();
-    MakeHeroWithCha(session, /*cha=*/100);
+    MakeHeroWithCha(session, 100);
     auto shopkeeper_id = session.registry.entities.CreateEntity();
     auto item_id = MakeNamedPricedItem(session.registry, shopkeeper_id, "Sword", 100);
     game_states::TradeState state(session, shopkeeper_id);
@@ -140,7 +140,7 @@ TEST(TradeState, FailedBuyLogsAndChangesNothing) {
 
 TEST(TradeState, CancelPops) {
     auto session = MakeTestSession();
-    MakeHeroWithCha(session, /*cha=*/100);
+    MakeHeroWithCha(session, 100);
     auto shopkeeper_id = session.registry.entities.CreateEntity();
     game_states::TradeState state(session, shopkeeper_id);
 

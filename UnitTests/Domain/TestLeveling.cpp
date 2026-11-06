@@ -24,7 +24,7 @@ entity::EntityId MakeHero(domain::Registry &registry, int level, int xp, hero::H
 
 TEST(Leveling, AwardXpBelowThresholdJustAccumulates) {
     domain::Registry registry;
-    auto id = MakeHero(registry, /*level=*/1, /*xp=*/0, hero::HClass::Warrior, 10, 10, 0, 0);
+    auto id = MakeHero(registry, 1, 0, hero::HClass::Warrior, 10, 10, 0, 0);
 
     auto result = leveling::AwardXp(registry, {.id = id, .amount = 5});
 
@@ -37,8 +37,7 @@ TEST(Leveling, AwardXpBelowThresholdJustAccumulates) {
 
 TEST(Leveling, AwardXpCrossingOneThresholdLevelsUpAndFullyHeals) {
     domain::Registry registry;
-    auto id = MakeHero(registry, /*level=*/1, /*xp=*/0, hero::HClass::Mage, /*hp_current=*/1,
-                       /*hp_max=*/4, /*mana_current=*/1, /*mana_max=*/8);
+    auto id = MakeHero(registry, 1, 0, hero::HClass::Mage, 1, 4, 1, 8);
 
     auto result = leveling::AwardXp(registry, {.id = id, .amount = 15});
 
@@ -57,7 +56,7 @@ TEST(Leveling, AwardXpCrossingOneThresholdLevelsUpAndFullyHeals) {
 
 TEST(Leveling, HugeAwardCascadesMultipleLevelsAndStopsAtCap) {
     domain::Registry registry;
-    auto id = MakeHero(registry, /*level=*/1, /*xp=*/0, hero::HClass::Warrior, 10, 10, 0, 0);
+    auto id = MakeHero(registry, 1, 0, hero::HClass::Warrior, 10, 10, 0, 0);
 
     auto result = leveling::AwardXp(registry, {.id = id, .amount = 2000});
 
@@ -71,7 +70,7 @@ TEST(Leveling, HugeAwardCascadesMultipleLevelsAndStopsAtCap) {
 
 TEST(Leveling, LevelNeverExceedskMaxPlayerLevelEvenWithMassiveExcessXp) {
     domain::Registry registry;
-    auto id = MakeHero(registry, /*level=*/1, /*xp=*/0, hero::HClass::Warrior, 10, 10, 0, 0);
+    auto id = MakeHero(registry, 1, 0, hero::HClass::Warrior, 10, 10, 0, 0);
 
     leveling::AwardXp(registry, {.id = id, .amount = 1'000'000});
 

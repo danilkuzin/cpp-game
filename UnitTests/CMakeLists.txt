@@ -17,6 +17,7 @@ add_executable(UnitTests
         Domain/TestMeleeSystem.cpp
         Domain/TestMonster.cpp
         Domain/TestMovementSystem.cpp
+        Domain/TestNavigation.cpp
         Domain/TestRangedSystem.cpp
         Domain/TestRegistry.cpp
         Domain/TestRoll.cpp

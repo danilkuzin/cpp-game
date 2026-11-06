@@ -25,10 +25,10 @@ entity::EntityId MakeTrapAhead(domain::Registry &registry, int difficulty = 0) {
 
 } // namespace
 
-TEST(TrapEncounter, SteppingOnActiveTrapStampsDamageIntentAndFiresEvent) {
+TEST(TrapEncounter, DamagesAndLogs) {
     auto registry = MakeTestRegistry();
 
-    auto id = MakeMoverAt(registry, kMoverTile, /*hp=*/3, /*max_hp=*/1);
+    auto id = MakePlayerMoverAt(registry, kMoverTile, 3, 1);
     MakeTrapAhead(registry);
     registry.Storage<component::IntentToMove>().Add(id, {.dcoord = Vector2Int::Right()});
 
@@ -41,9 +41,9 @@ TEST(TrapEncounter, SteppingOnActiveTrapStampsDamageIntentAndFiresEvent) {
     EXPECT_EQ(result.events.front().value, 2);
 }
 
-TEST(TrapEncounter, TrapDamageIsFlooredAtCurrentHpMinusOne) {
+TEST(TrapEncounter, LeavesOneHp) {
     auto registry = MakeTestRegistry();
-    auto id = MakeMoverAt(registry, kMoverTile, /*hp=*/2, /*max_hp=*/100);
+    auto id = MakePlayerMoverAt(registry, kMoverTile, 2, 100);
     MakeTrapAhead(registry);
     registry.Storage<component::IntentToMove>().Add(id, {.dcoord = Vector2Int::Right()});
 
@@ -56,9 +56,9 @@ TEST(TrapEncounter, TrapDamageIsFlooredAtCurrentHpMinusOne) {
     EXPECT_EQ(registry.Storage<component::HealthComponent>().Get(id)->current, 1);
 }
 
-TEST(TrapEncounter, OneHpMoverSurvivesATrapRegardlessOfTheRoll) {
+TEST(TrapEncounter, OneHpSurvives) {
     auto registry = MakeTestRegistry();
-    auto id = MakeMoverAt(registry, kMoverTile, /*hp=*/1, /*max_hp=*/100);
+    auto id = MakePlayerMoverAt(registry, kMoverTile, 1, 100);
     MakeTrapAhead(registry);
     registry.Storage<component::IntentToMove>().Add(id, {.dcoord = Vector2Int::Right()});
 
@@ -71,9 +71,9 @@ TEST(TrapEncounter, OneHpMoverSurvivesATrapRegardlessOfTheRoll) {
     EXPECT_EQ(registry.Storage<component::HealthComponent>().Get(id)->current, 1);
 }
 
-TEST(TrapEncounter, TrapIsOneShot) {
+TEST(TrapEncounter, OneShot) {
     auto registry = MakeTestRegistry();
-    auto id = MakeMoverAt(registry, kMoverTile, /*hp=*/100, /*max_hp=*/100);
+    auto id = MakePlayerMoverAt(registry, kMoverTile, 100, 100);
     auto trap_id = MakeTrapAhead(registry);
 
     registry.Storage<component::IntentToMove>().Add(id, {.dcoord = Vector2Int::Right()});
@@ -92,9 +92,9 @@ TEST(TrapEncounter, TrapIsOneShot) {
     EXPECT_TRUE(result.events.empty());
 }
 
-TEST(TrapEncounter, TrapDamageAppliesThroughDamageSystem) {
+TEST(TrapEncounter, DamageApplies) {
     auto registry = MakeTestRegistry();
-    auto id = MakeMoverAt(registry, kMoverTile, /*hp=*/100, /*max_hp=*/100);
+    auto id = MakePlayerMoverAt(registry, kMoverTile, 100, 100);
     MakeTrapAhead(registry);
     registry.Storage<component::IntentToMove>().Add(id, {.dcoord = Vector2Int::Right()});
 
@@ -106,10 +106,9 @@ TEST(TrapEncounter, TrapDamageAppliesThroughDamageSystem) {
               std::max(0, 100 - trap_damage));
 }
 
-TEST(TrapEncounter, WouldBeLethalTrapLeavesMoverAliveAndLootUntouched) {
+TEST(TrapEncounter, NeverKills) {
     auto registry = MakeTestRegistry();
-    auto id = MakeMoverAt(registry, kMoverTile, /*hp=*/1, /*max_hp=*/1);
-    registry.Storage<component::MonsterTag>().Add(id, {});
+    auto id = MakePlayerMoverAt(registry, kMoverTile, 1, 1);
     MakeTrapAhead(registry);
 
     auto sword = registry.entities.CreateEntity();
@@ -127,11 +126,11 @@ TEST(TrapEncounter, WouldBeLethalTrapLeavesMoverAliveAndLootUntouched) {
     EXPECT_TRUE(registry.Storage<game_item::OwnershipComponent>().Has(sword));
 }
 
-TEST(TrapEncounter, MoverWithSkillDisarmsTrapOnGuaranteedSuccess) {
+TEST(TrapEncounter, SkillDisarms) {
     auto registry = MakeTestRegistry();
-    auto id = MakeMoverAt(registry, kMoverTile, /*hp=*/10, /*max_hp=*/10);
+    auto id = MakePlayerMoverAt(registry, kMoverTile, 10, 10);
     registry.Storage<hero::HeroSkills>().Add(id, {.skills = {50, 50, 50, 50, 50}});
-    auto trap_id = MakeTrapAhead(registry, /*difficulty=*/-1000);
+    auto trap_id = MakeTrapAhead(registry, -1000);
     registry.Storage<component::IntentToMove>().Add(id, {.dcoord = Vector2Int::Right()});
 
     auto result = systems::MovementSystem(registry);
@@ -143,11 +142,11 @@ TEST(TrapEncounter, MoverWithSkillDisarmsTrapOnGuaranteedSuccess) {
     EXPECT_FALSE(registry.GetRef<map::TrapComponent>(trap_id).active);
 }
 
-TEST(TrapEncounter, MoverWithSkillTakesDamageOnGuaranteedFailure) {
+TEST(TrapEncounter, FailedSkillDamages) {
     auto registry = MakeTestRegistry();
-    auto id = MakeMoverAt(registry, kMoverTile, /*hp=*/100, /*max_hp=*/100);
+    auto id = MakePlayerMoverAt(registry, kMoverTile, 100, 100);
     registry.Storage<hero::HeroSkills>().Add(id, {.skills = {50, 50, 50, 50, 50}});
-    auto trap_id = MakeTrapAhead(registry, /*difficulty=*/1000);
+    auto trap_id = MakeTrapAhead(registry, 1000);
     registry.Storage<component::IntentToMove>().Add(id, {.dcoord = Vector2Int::Right()});
 
     auto result = systems::MovementSystem(registry);
@@ -159,18 +158,16 @@ TEST(TrapEncounter, MoverWithSkillTakesDamageOnGuaranteedFailure) {
     EXPECT_FALSE(registry.GetRef<map::TrapComponent>(trap_id).active);
 }
 
-TEST(TrapEncounter, MoverWithoutSkillsComponentAlwaysSpringsTheTrap) {
+TEST(TrapEncounter, MonsterLeavesIt) {
     auto registry = MakeTestRegistry();
-    auto id = MakeMoverAt(registry, kMoverTile, /*hp=*/100, /*max_hp=*/100);
-    registry.Storage<component::MonsterTag>().Add(id, {});
-    auto trap_id = MakeTrapAhead(registry, /*difficulty=*/-1000);
+    auto id = MakeCreatureAt(registry, kMoverTile, 5, true);
+    auto trap_id = MakeTrapAhead(registry);
     registry.Storage<component::IntentToMove>().Add(id, {.dcoord = Vector2Int::Right()});
 
     auto result = systems::MovementSystem(registry);
 
-    ASSERT_TRUE(registry.Storage<component::IntentToTakeDamage>().Has(id));
-    ASSERT_EQ(result.events.size(), 1U);
-    EXPECT_EQ(result.events.front().type, event::Type::TrapDamage);
+    EXPECT_TRUE(result.events.empty());
+    EXPECT_FALSE(registry.Storage<component::IntentToTakeDamage>().Has(id));
     ASSERT_TRUE(registry.Storage<map::TrapComponent>().Has(trap_id));
-    EXPECT_FALSE(registry.GetRef<map::TrapComponent>(trap_id).active);
+    EXPECT_TRUE(registry.GetRef<map::TrapComponent>(trap_id).active);
 }

@@ -15,8 +15,7 @@
 TEST(GameplayInput, MoveNorthStampsExactlyOneIntent) {
     auto session = MakeTestSession();
     const auto hero_id =
-        MakeCreatureAt(session.registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 10,
-                       /*is_monster=*/false);
+        MakeCreatureAt(session.registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 10, false);
     game_states::GameplayState state(session);
 
     state.OnAction(ui::Action::MoveNorth);
@@ -29,8 +28,7 @@ TEST(GameplayInput, MoveNorthStampsExactlyOneIntent) {
 
 TEST(GameplayInput, OpenInventoryPushesAndStampsNothing) {
     auto session = MakeTestSession();
-    MakeCreatureAt(session.registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 10,
-                   /*is_monster=*/false);
+    MakeCreatureAt(session.registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 10, false);
     game_states::GameplayState state(session);
 
     auto result = state.OnAction(ui::Action::OpenInventory);
@@ -46,8 +44,7 @@ TEST(GameplayInput, OpenInventoryPushesAndStampsNothing) {
 
 TEST(GameplayInput, CancelStampsNothingAndReturnsNoResult) {
     auto session = MakeTestSession();
-    MakeCreatureAt(session.registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 10,
-                   /*is_monster=*/false);
+    MakeCreatureAt(session.registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 10, false);
     game_states::GameplayState state(session);
 
     auto result = state.OnAction(ui::Action::Cancel);

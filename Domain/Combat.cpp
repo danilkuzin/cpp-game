@@ -50,7 +50,7 @@ int ResolveMelee(const component::AttributesComponent &att_attr,
     const int mitigation = (def_attr.chars[hero::kChrStr] / 2) + def_armor;
     damage -= mitigation;
 
-    damage = std::max(0, damage);
+    damage = std::max(kMinLandedDamage, damage);
     return damage;
 }
 
@@ -82,7 +82,7 @@ int ResolveRanged(const component::AttributesComponent &att_attr,
     const int mitigation = (def_attr.chars[hero::kChrStr] / 2) + def_armor;
     damage -= mitigation;
 
-    damage = std::max(0, damage);
+    damage = std::max(kMinLandedDamage, damage);
     return damage;
 }
 
@@ -112,6 +112,4 @@ bool RollsToDodge(domain::Registry &registry, entity::EntityId defender) {
     }
     return dodged;
 }
-
-int Sgn(const int val) { return (static_cast<int>(0 < val) - static_cast<int>(val < 0)); }
 } // namespace combat

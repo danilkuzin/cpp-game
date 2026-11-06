@@ -32,14 +32,14 @@ entity::EntityId MakeShooterAt(domain::Registry &registry, Location loc) {
 }
 
 entity::EntityId MakeTargetAt(domain::Registry &registry, Location loc) {
-    return MakeCreatureAt(registry, loc, /*hp=*/10, /*is_monster=*/true);
+    return MakeCreatureAt(registry, loc, 10, true);
 }
 } // namespace
 
 TEST(RangedSystem, EnemyInRangeAlongDirectionTakesDamageAndAmmoDrops) {
     auto registry = MakeTestRegistry();
     auto shooter = MakeShooterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0});
-    auto weapon_id = EquipCrossbow(registry, shooter, /*range=*/5, /*ammo=*/3);
+    auto weapon_id = EquipCrossbow(registry, shooter, 5, 3);
     auto enemy = MakeTargetAt(registry, {.coord = {.x = 7, .y = 5}, .map_level = 0});
     registry.Storage<component::IntentToShoot>().Add(shooter, {.direction = Vector2Int::Right()});
 
@@ -56,7 +56,7 @@ TEST(RangedSystem, EnemyInRangeAlongDirectionTakesDamageAndAmmoDrops) {
 TEST(RangedSystem, WallBetweenShooterAndEnemyStopsTheShot) {
     auto registry = MakeTestRegistry();
     auto shooter = MakeShooterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0});
-    auto weapon_id = EquipCrossbow(registry, shooter, /*range=*/5, /*ammo=*/3);
+    auto weapon_id = EquipCrossbow(registry, shooter, 5, 3);
     auto enemy = MakeTargetAt(registry, {.coord = {.x = 7, .y = 5}, .map_level = 0});
     registry.maps[0].At({.x = 6, .y = 5}).terrain_id = 4;
     registry.Storage<component::IntentToShoot>().Add(shooter, {.direction = Vector2Int::Right()});
@@ -70,7 +70,7 @@ TEST(RangedSystem, WallBetweenShooterAndEnemyStopsTheShot) {
 TEST(RangedSystem, NoTargetInRangeSpendsAmmoButStampsNothing) {
     auto registry = MakeTestRegistry();
     auto shooter = MakeShooterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0});
-    auto weapon_id = EquipCrossbow(registry, shooter, /*range=*/5, /*ammo=*/3);
+    auto weapon_id = EquipCrossbow(registry, shooter, 5, 3);
     registry.Storage<component::IntentToShoot>().Add(shooter, {.direction = Vector2Int::Right()});
 
     systems::RangedSystem(registry);
@@ -95,7 +95,7 @@ TEST(RangedSystem, NoWeaponEmitsEventAndStampsNothing) {
 TEST(RangedSystem, NoAmmoEmitsEventAndStampsNothing) {
     auto registry = MakeTestRegistry();
     auto shooter = MakeShooterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0});
-    auto weapon_id = EquipCrossbow(registry, shooter, /*range=*/5, /*ammo=*/0);
+    auto weapon_id = EquipCrossbow(registry, shooter, 5, 0);
     auto enemy = MakeTargetAt(registry, {.coord = {.x = 7, .y = 5}, .map_level = 0});
     registry.Storage<component::IntentToShoot>().Add(shooter, {.direction = Vector2Int::Right()});
 
@@ -111,7 +111,7 @@ TEST(RangedSystem, SkilledShooterHitsUnskilledDefender) {
     auto registry = MakeTestRegistry();
     auto shooter = MakeShooterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0});
     registry.Storage<hero::HeroSkills>().Add(shooter, {.skills = {0, 0, 0, 100, 0}});
-    EquipCrossbow(registry, shooter, /*range=*/5, /*ammo=*/3);
+    EquipCrossbow(registry, shooter, 5, 3);
     auto enemy = MakeTargetAt(registry, {.coord = {.x = 7, .y = 5}, .map_level = 0});
     registry.Storage<component::IntentToShoot>().Add(shooter, {.direction = Vector2Int::Right()});
 
@@ -126,7 +126,7 @@ TEST(RangedSystem, UnskilledRangedWeaponAlwaysMisses) {
     auto registry = MakeTestRegistry();
     auto shooter = MakeShooterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0});
     registry.Storage<hero::HeroSkills>().Add(shooter, {.skills = {0, 0, 0, 0, 0}});
-    auto weapon_id = EquipCrossbow(registry, shooter, /*range=*/5, /*ammo=*/3);
+    auto weapon_id = EquipCrossbow(registry, shooter, 5, 3);
     auto enemy = MakeTargetAt(registry, {.coord = {.x = 7, .y = 5}, .map_level = 0});
     registry.Storage<component::IntentToShoot>().Add(shooter, {.direction = Vector2Int::Right()});
 
@@ -142,7 +142,7 @@ TEST(RangedSystem, DefenderWithMaxDefenceDodgesAGuaranteedHit) {
     auto registry = MakeTestRegistry();
     auto shooter = MakeShooterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0});
     registry.Storage<hero::HeroSkills>().Add(shooter, {.skills = {0, 0, 0, 100, 0}});
-    EquipCrossbow(registry, shooter, /*range=*/5, /*ammo=*/3);
+    EquipCrossbow(registry, shooter, 5, 3);
     auto enemy = MakeTargetAt(registry, {.coord = {.x = 7, .y = 5}, .map_level = 0});
     registry.Storage<hero::HeroSkills>().Add(enemy, {.skills = {0, 0, 100, 0, 0}});
     registry.Storage<component::IntentToShoot>().Add(shooter, {.direction = Vector2Int::Right()});

@@ -170,7 +170,7 @@ inline const std::string &StrNoMana() {
 }
 
 inline const std::string &StrBlocked() {
-    static const std::string kValue = "blocked";
+    static const std::string kValue = "path blocked";
     return kValue;
 }
 

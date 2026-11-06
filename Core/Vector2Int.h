@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <functional>
 
@@ -18,6 +19,8 @@ struct Vector2Int {
     static Vector2Int Right();
     static Vector2Int Up();
     static Vector2Int Down();
+
+    static std::array<Vector2Int, 4> Cardinals();
 };
 
 template <> struct std::hash<Vector2Int> {

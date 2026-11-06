@@ -64,7 +64,7 @@ TEST(Hero, CreationStampsEachSkillWithinItsClassRange) {
 TEST(Hero, GiveStartingKitEquipsAWeaponWhenOneExistsInTheDatabase) {
     auto registry = domain::Registry{};
     database::GameDatabase db;
-    auto axe = MakeItemTemplate("axe_standard", "Axe", /*size=*/2, "../axe.bmp");
+    auto axe = MakeItemTemplate("axe_standard", "Axe", 2, "../axe.bmp");
     axe.equippable = game_item::EquippableComponent{.allowed_slots = game_item::EquipSlot::AnyHand};
     db.AddItem(axe);
     const entity::HeroGenerationParameters hparams{.name = "abc"};
@@ -95,7 +95,7 @@ TEST(Hero, GiveStartingKitIsANoOpWhenDatabaseHasNoWeapon) {
 TEST(Hero, GiveStartingKitEquipsCrossbowForRanger) {
     auto registry = domain::Registry{};
     database::GameDatabase db;
-    auto crossbow = MakeItemTemplate("crossbow_standard", "CrossBow", /*size=*/2, "../cross.bmp");
+    auto crossbow = MakeItemTemplate("crossbow_standard", "CrossBow", 2, "../cross.bmp");
     crossbow.ranged = game_item::RangedWeaponComponent{
         .damage = {.count = 1, .sides = 4}, .max_ammo = 20, .range = 5};
     crossbow.equippable =

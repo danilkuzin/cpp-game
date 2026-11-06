@@ -9,6 +9,7 @@
 
 namespace combat {
 inline constexpr int kUnarmedBaseSides = 2;
+inline constexpr int kMinLandedDamage = 1;
 inline constexpr game_item::MeleeWeaponComponent kUnarmedMelee{
     .damage = {.count = 1, .sides = kUnarmedBaseSides}};
 
@@ -33,6 +34,4 @@ int ResolveRanged(const component::AttributesComponent &att_attr,
                   const component::AttributesComponent &def_attr, int def_armor);
 
 int ResolveSpell(const spell::DamageComponent &damage);
-
-int Sgn(int val);
 } // namespace combat

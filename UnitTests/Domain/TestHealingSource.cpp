@@ -20,10 +20,10 @@ entity::EntityId MakeSourceAhead(domain::Registry &registry, int amount) {
 
 } // namespace
 
-TEST(HealingSource, SteppingOnHealingSourceStampsHealIntentAndConsumesSource) {
+TEST(HealingSource, HealsAndConsumes) {
     auto registry = MakeTestRegistry();
-    auto id = MakeMoverAt(registry, kMoverTile, /*hp=*/5, /*max_hp=*/10);
-    auto source_id = MakeSourceAhead(registry, /*amount=*/7);
+    auto id = MakePlayerMoverAt(registry, kMoverTile, 5, 10);
+    auto source_id = MakeSourceAhead(registry, 7);
     registry.Storage<component::IntentToMove>().Add(id, {.dcoord = Vector2Int::Right()});
 
     systems::MovementSystem(registry);
@@ -34,13 +34,26 @@ TEST(HealingSource, SteppingOnHealingSourceStampsHealIntentAndConsumesSource) {
     EXPECT_FALSE(registry.Storage<Location>().Has(source_id));
 }
 
-TEST(HealingSource, HealingIsOneShot) {
+TEST(HealingSource, MonsterLeavesIt) {
     auto registry = MakeTestRegistry();
-    auto id = MakeMoverAt(registry, kMoverTile, /*hp=*/5, /*max_hp=*/10);
-    MakeSourceAhead(registry, /*amount=*/7);
+    auto id = MakeCreatureAt(registry, kMoverTile, 5, true);
+    auto source_id = MakeSourceAhead(registry, 7);
+    registry.Storage<component::IntentToMove>().Add(id, {.dcoord = Vector2Int::Right()});
+
+    systems::MovementSystem(registry);
+
+    EXPECT_FALSE(registry.Storage<component::IntentToHeal>().Has(id));
+    EXPECT_TRUE(registry.Storage<map::HealingSourceComponent>().Has(source_id));
+}
+
+TEST(HealingSource, OneShot) {
+    auto registry = MakeTestRegistry();
+    auto id = MakePlayerMoverAt(registry, kMoverTile, 5, 10);
+    MakeSourceAhead(registry, 7);
 
     registry.Storage<component::IntentToMove>().Add(id, {.dcoord = Vector2Int::Right()});
     systems::MovementSystem(registry);
+    ASSERT_TRUE(registry.Storage<component::IntentToHeal>().Has(id));
     registry.Storage<component::IntentToHeal>().Clear();
 
     registry.Storage<component::IntentToMove>().Add(id, {.dcoord = Vector2Int::Left()});

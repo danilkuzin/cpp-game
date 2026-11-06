@@ -47,7 +47,7 @@ database::GameDatabase MakeSpellDatabase() {
 TEST(SpellSystem, FireballOnEnemyInRangeStampsDamageAndSpendsMana) {
     auto registry = MakeTestRegistry();
     auto db = MakeSpellDatabase();
-    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, /*mana=*/3);
+    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 3);
     auto enemy = MakeEnemyAt(registry, {.coord = {.x = 7, .y = 5}, .map_level = 0});
     registry.Storage<component::IntentToCastSpell>().Add(
         caster, {.spell_id = "fireball", .costs_mana = true, .direction = Vector2Int::Right()});
@@ -63,7 +63,7 @@ TEST(SpellSystem, FireballOnEnemyInRangeStampsDamageAndSpendsMana) {
 TEST(SpellSystem, NoManaEmitsEventAndStampsNothing) {
     auto registry = MakeTestRegistry();
     auto db = MakeSpellDatabase();
-    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, /*mana=*/0);
+    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 0);
     auto enemy = MakeEnemyAt(registry, {.coord = {.x = 7, .y = 5}, .map_level = 0});
     registry.Storage<component::IntentToCastSpell>().Add(
         caster, {.spell_id = "fireball", .costs_mana = true, .direction = Vector2Int::Right()});
@@ -80,7 +80,7 @@ TEST(SpellSystem, NoManaEmitsEventAndStampsNothing) {
 TEST(SpellSystem, HealingLightStampsIntentToHealOnCaster) {
     auto registry = MakeTestRegistry();
     auto db = MakeSpellDatabase();
-    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, /*mana=*/3);
+    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 3);
     registry.Storage<component::IntentToCastSpell>().Add(
         caster,
         {.spell_id = "healing_light", .costs_mana = true, .direction = Vector2Int::Right()});
@@ -95,7 +95,7 @@ TEST(SpellSystem, HealingLightStampsIntentToHealOnCaster) {
 TEST(SpellSystem, NoDirectionAutoTargetsNearestEnemyAcrossTheFourCardinalRays) {
     auto registry = MakeTestRegistry();
     auto db = MakeSpellDatabase();
-    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, /*mana=*/3);
+    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 3);
     auto far_enemy = MakeEnemyAt(registry, {.coord = {.x = 5, .y = 1}, .map_level = 0});
     auto near_enemy = MakeEnemyAt(registry, {.coord = {.x = 7, .y = 5}, .map_level = 0});
     registry.Storage<component::IntentToCastSpell>().Add(
@@ -110,7 +110,7 @@ TEST(SpellSystem, NoDirectionAutoTargetsNearestEnemyAcrossTheFourCardinalRays) {
 TEST(SpellSystem, NoDirectionAndNoEnemyInRangeStampsNothing) {
     auto registry = MakeTestRegistry();
     auto db = MakeSpellDatabase();
-    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, /*mana=*/3);
+    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 3);
     registry.Storage<component::IntentToCastSpell>().Add(
         caster, {.spell_id = "fireball", .costs_mana = true, .direction = std::nullopt});
 
@@ -123,7 +123,7 @@ TEST(SpellSystem, NoDirectionAndNoEnemyInRangeStampsNothing) {
 TEST(SpellSystem, HealingLightResolvedThroughHealSystemRestoresCasterHp) {
     auto registry = MakeTestRegistry();
     auto db = MakeSpellDatabase();
-    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, /*mana=*/3);
+    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 3);
     registry.Storage<component::HealthComponent>().Add(caster, {.current = 5, .max = 10});
     registry.Storage<component::IntentToCastSpell>().Add(
         caster,
@@ -137,7 +137,7 @@ TEST(SpellSystem, HealingLightResolvedThroughHealSystemRestoresCasterHp) {
 
 TEST(SpellSystem, SpellRayTilesStopAtAWall) {
     auto registry = MakeTestRegistry();
-    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, /*mana=*/3);
+    auto caster = MakeCasterAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 3);
     registry.maps[0].At({.x = 7, .y = 5}).terrain_id = 4;
 
     const auto tiles = systems::SpellRayTiles(registry, caster, Vector2Int::Right());

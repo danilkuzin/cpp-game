@@ -26,10 +26,10 @@ entity::EntityId MakeOwnedItem(domain::Registry &registry, entity::EntityId owne
 } // namespace
 
 TEST(Trade, HagglePriceFavorsHeroOnSuccessRegardlessOfSide) {
-    EXPECT_EQ(trade::HagglePrice(100, /*success=*/true, /*hero_is_buying=*/true), 90);
-    EXPECT_EQ(trade::HagglePrice(100, /*success=*/false, /*hero_is_buying=*/true), 110);
-    EXPECT_EQ(trade::HagglePrice(100, /*success=*/true, /*hero_is_buying=*/false), 110);
-    EXPECT_EQ(trade::HagglePrice(100, /*success=*/false, /*hero_is_buying=*/false), 90);
+    EXPECT_EQ(trade::HagglePrice(100, true, true), 90);
+    EXPECT_EQ(trade::HagglePrice(100, false, true), 110);
+    EXPECT_EQ(trade::HagglePrice(100, true, false), 110);
+    EXPECT_EQ(trade::HagglePrice(100, false, false), 90);
 }
 
 TEST(Trade, SellTransfersItemAndMoneyOnSuccessfulHaggle) {
@@ -122,9 +122,9 @@ TEST(Trade, BuyRejectsWhenHeroHasNoCarryCapacity) {
     domain::Registry registry;
     auto hero_id = MakeHeroWithCha(registry, 100);
     registry.Storage<component::PurseComponent>().Add(hero_id, {.money = 1000});
-    MakeOwnedItem(registry, hero_id, /*base_price=*/1, /*size=*/game_item::kMaxCarrySize);
+    MakeOwnedItem(registry, hero_id, 1, game_item::kMaxCarrySize);
     auto shopkeeper_id = registry.entities.CreateEntity();
-    auto item_id = MakeOwnedItem(registry, shopkeeper_id, 100, /*size=*/1);
+    auto item_id = MakeOwnedItem(registry, shopkeeper_id, 100, 1);
 
     EXPECT_FALSE(trade::Buy(
         registry, {.hero_id = hero_id, .shopkeeper_id = shopkeeper_id, .item_id = item_id}));
@@ -137,8 +137,8 @@ TEST(Trade, SellIsNotBlockedByShopkeeperCapacity) {
     auto hero_id = MakeHeroWithCha(registry, 0);
     auto shopkeeper_id = registry.entities.CreateEntity();
     registry.Storage<component::PurseComponent>().Add(shopkeeper_id, {.money = 1000});
-    MakeOwnedItem(registry, shopkeeper_id, /*base_price=*/1, /*size=*/game_item::kMaxCarrySize * 3);
-    auto item_id = MakeOwnedItem(registry, hero_id, /*base_price=*/10, /*size=*/5);
+    MakeOwnedItem(registry, shopkeeper_id, 1, game_item::kMaxCarrySize * 3);
+    auto item_id = MakeOwnedItem(registry, hero_id, 10, 5);
 
     EXPECT_TRUE(trade::Sell(
         registry, {.hero_id = hero_id, .shopkeeper_id = shopkeeper_id, .item_id = item_id}));

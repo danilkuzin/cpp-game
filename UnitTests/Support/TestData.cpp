@@ -20,8 +20,7 @@ domain::ViewConfig MakeTestViewConfig() {
 
 database::GameDatabase MakeTestDatabase() {
     database::GameDatabase db;
-    auto copper =
-        MakeItemTemplate(game_item::CurrencyItemId(), "Copper", /*size=*/0, "../copper.bmp");
+    auto copper = MakeItemTemplate(game_item::CurrencyItemId(), "Copper", 0, "../copper.bmp");
     copper.currency = game_item::CurrencyComponent{.amount = 0};
     db.AddItem(copper);
     db.AddSpell({.id = "fireball",

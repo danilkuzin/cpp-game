@@ -1,5 +1,6 @@
 #include "Bindings.h"
 #include "Components.h"
+#include "EntityFactory.h"
 #include "EntityStorage.h"
 #include "GameplayState.h"
 #include "Location.h"
@@ -20,7 +21,7 @@ entity::EntityId MakePipelineHero(domain::Registry &registry, Vector2Int coord) 
 }
 
 entity::EntityId MakeStationaryRat(domain::Registry &registry, Vector2Int coord) {
-    return MakeNamedMonsterAt(registry, coord, /*hp=*/1, "Rat");
+    return MakeNamedMonsterAt(registry, coord, 1, "Rat");
 }
 
 void StepEast(game_states::GameplayState &state, const domain::Registry &registry) {
@@ -64,4 +65,19 @@ TEST(GameplayPipeline, ANonTurnEventDoesNotRefreshStats) {
 
     EXPECT_TRUE(session.stats.hero_name.empty());
     ExpectNoIntentsSurvived(session.registry);
+}
+
+TEST(GameplayPipeline, MonsterOnHealingTile) {
+    auto session = MakeTestSession();
+    MakePipelineHero(session.registry, {.x = 5, .y = 3});
+    auto monster = MakeNamedMonsterAt(session.registry, {.x = 5, .y = 6}, 10, "Rat");
+    session.registry.Storage<component::VisionComponent>().Add(monster, {.view_zone = 8});
+    entity::CreateHealingSource(session.registry, 10, {.coord = {.x = 5, .y = 5}, .map_level = 0});
+    game_states::GameplayState state(session);
+
+    state.OnAction(ui::Action::MoveNorth);
+    EXPECT_NO_THROW(state.Update());
+
+    ExpectNoIntentsSurvived(session.registry);
+    EXPECT_EQ(session.registry.GetRef<Location>(monster).coord, (Vector2Int{.x = 5, .y = 5}));
 }

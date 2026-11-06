@@ -60,6 +60,10 @@ bool IsPassableAndUnoccupied(const domain::Registry &registry, const Location lo
     return PassableTerrainAt(registry, loc) && TileIsEmpty(registry, loc);
 }
 
+bool CanEnter(const domain::Registry &registry, const Location loc) {
+    return PassableTerrainAt(registry, loc) && !BlockingEntityAt(registry, loc);
+}
+
 std::optional<entity::EntityId> ItemIdAt(const domain::Registry &registry, Location loc) {
     for (auto id : EntitiesAt(registry, loc)) {
         if (registry.Storage<component::ItemTag>().Has(id)) {

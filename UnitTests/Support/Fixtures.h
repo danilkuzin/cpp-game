@@ -84,16 +84,18 @@ inline component::AttributesComponent WithDex(int dex) { return WithChar(hero::k
 
 inline component::AttributesComponent WithCha(int cha) { return WithChar(hero::kChrCha, cha); }
 
-inline entity::EntityId MakeMoverAt(domain::Registry &registry, Location loc, int hp, int max_hp) {
+inline entity::EntityId MakePlayerMoverAt(domain::Registry &registry, Location loc, int hp,
+                                          int max_hp) {
     auto id = registry.entities.CreateEntity();
     registry.Storage<component::HealthComponent>().Add(id, {.current = hp, .max = max_hp});
     registry.Storage<Location>().Add(id, loc);
+    registry.Storage<component::PlayerTag>().Add(id, {});
+    registry.Storage<component::VisionComponent>().Add(id, {.view_zone = 1});
     return id;
 }
 
 inline entity::EntityId MakeHeroAt(domain::Registry &registry, Vector2Int coord) {
-    auto id = MakeCreatureAt(registry, {.coord = coord, .map_level = 0}, /*hp=*/10,
-                             /*is_monster=*/false);
+    auto id = MakeCreatureAt(registry, {.coord = coord, .map_level = 0}, 10, false);
     registry.Storage<component::VisionComponent>().Add(id, {.view_zone = 1});
     registry.Storage<component::NameComponent>().Add(id, {.name = "Hero"});
     registry.Storage<hero::HeroExperience>().Add(id, {});
@@ -103,7 +105,7 @@ inline entity::EntityId MakeHeroAt(domain::Registry &registry, Vector2Int coord)
 
 inline entity::EntityId MakeNamedMonsterAt(domain::Registry &registry, Vector2Int coord, int hp,
                                            const std::string &name) {
-    auto id = MakeCreatureAt(registry, {.coord = coord, .map_level = 0}, hp, /*is_monster=*/true);
+    auto id = MakeCreatureAt(registry, {.coord = coord, .map_level = 0}, hp, true);
     registry.Storage<component::NameComponent>().Add(id, {.name = name});
     return id;
 }

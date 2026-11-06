@@ -16,10 +16,10 @@ game_item::RangedWeaponComponent MakeRangedWeapon(int dice, int sides, int range
 
 } // namespace
 
-TEST(ResolveMelee, DamageNeverNegativeEvenAgainstOverwhelmingMitigation) {
+TEST(ResolveMelee, MinimumDamage) {
     auto damage = combat::ResolveMelee(WithStr(0), combat::kUnarmedMelee, WithStr(40), 100);
 
-    EXPECT_EQ(damage, 0);
+    EXPECT_EQ(damage, combat::kMinLandedDamage);
 }
 
 TEST(ResolveMelee, WeaponDiceFallWithinExpectedRange) {
@@ -31,12 +31,12 @@ TEST(ResolveMelee, WeaponDiceFallWithinExpectedRange) {
     EXPECT_LE(damage, 18);
 }
 
-TEST(ResolveMelee, ArmorReducesIncomingDamageToZeroWhenOverwhelming) {
+TEST(ResolveMelee, ArmorCannotStopHit) {
     auto weapon = MakeWeapon(3, 6);
 
     auto damage = combat::ResolveMelee(WithStr(0), weapon, WithStr(0), 100);
 
-    EXPECT_EQ(damage, 0);
+    EXPECT_EQ(damage, combat::kMinLandedDamage);
 }
 
 TEST(ResolveMelee, ArmedAttackerOutDamagesUnarmedAttacker) {
@@ -130,10 +130,10 @@ TEST(EffectiveArmor, IgnoresUnequippedArmor) {
     EXPECT_EQ(combat::EffectiveArmor(registry, id), 0);
 }
 
-TEST(ResolveRanged, DamageNeverNegativeEvenAgainstOverwhelmingMitigation) {
+TEST(ResolveRanged, MinimumDamage) {
     auto damage = combat::ResolveRanged(WithDex(0), MakeRangedWeapon(1, 4), WithStr(40), 100);
 
-    EXPECT_EQ(damage, 0);
+    EXPECT_EQ(damage, combat::kMinLandedDamage);
 }
 
 TEST(ResolveRanged, WeaponDiceFallWithinExpectedRangePlusDexModifier) {

@@ -53,7 +53,7 @@ TEST(EntitiesAt, SameCoordDifferentLevelReturnsEmpty) {
 TEST(BlockingEntityIdAt, ReturnsTheBodyStandingThere) {
     auto registry = MakeTestRegistry();
     const Location loc{.coord = {.x = 3, .y = 3}, .map_level = 0};
-    auto monster = MakeCreatureAt(registry, loc, /*hp=*/5, /*is_monster=*/true);
+    auto monster = MakeCreatureAt(registry, loc, 5, true);
 
     EXPECT_EQ(systems::BlockingEntityIdAt(registry, loc), monster);
     EXPECT_TRUE(systems::BlockingEntityAt(registry, loc));
@@ -62,7 +62,7 @@ TEST(BlockingEntityIdAt, ReturnsTheBodyStandingThere) {
 TEST(BlockingEntityIdAt, ItemsOnTheTileDoNotBlock) {
     auto registry = MakeTestRegistry();
     const Location loc{.coord = {.x = 3, .y = 3}, .map_level = 0};
-    MakeGroundItemAt(registry, loc, /*size=*/1);
+    MakeGroundItemAt(registry, loc, 1);
 
     EXPECT_FALSE(systems::BlockingEntityIdAt(registry, loc).has_value());
     EXPECT_FALSE(systems::BlockingEntityAt(registry, loc));
@@ -77,7 +77,7 @@ TEST(TileIsEmpty, TrueForABareTile) {
 TEST(TileIsEmpty, FalseForATileHoldingANonBlockingEntity) {
     auto registry = MakeTestRegistry();
     const Location loc{.coord = {.x = 3, .y = 3}, .map_level = 0};
-    entity::CreateTrap(registry, /*difficulty=*/10, loc);
+    entity::CreateTrap(registry, 10, loc);
 
     EXPECT_FALSE(systems::TileIsEmpty(registry, loc));
     EXPECT_FALSE(systems::BlockingEntityAt(registry, loc));
@@ -88,12 +88,11 @@ TEST(TileIsEmpty, GetUnoccupiedPointRefusesTilesHoldingTileFeatures) {
     auto &map = registry.maps[0];
     for (int x = 0; x < map.Width(); x++) {
         for (int y = 0; y < map.Height(); y++) {
-            entity::CreateTrap(registry, /*difficulty=*/10,
-                               {.coord = {.x = x, .y = y}, .map_level = 0});
+            entity::CreateTrap(registry, 10, {.coord = {.x = x, .y = y}, .map_level = 0});
         }
     }
 
-    EXPECT_FALSE(systems::UnoccupiedPoint(registry, /*map_level=*/0).has_value());
+    EXPECT_FALSE(systems::UnoccupiedPoint(registry, 0).has_value());
 }
 
 TEST(PassableTerrainAt, TrueForOpenGround) {
@@ -101,13 +100,13 @@ TEST(PassableTerrainAt, TrueForOpenGround) {
     EXPECT_TRUE(systems::PassableTerrainAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}));
 }
 
-TEST(PassableTerrainAt, FalseForImpassableTerrain) {
+TEST(PassableTerrainAt, FalseForImpassable) {
     auto registry = MakeTestRegistry();
     registry.maps[0].At({.x = 5, .y = 5}).terrain_id = 4;
     EXPECT_FALSE(systems::PassableTerrainAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}));
 }
 
-TEST(PassableTerrainAt, FalseOutsideTheMap) {
+TEST(PassableTerrainAt, FalseOffMap) {
     auto registry = MakeTestRegistry();
     EXPECT_FALSE(
         systems::PassableTerrainAt(registry, {.coord = {.x = -1, .y = 5}, .map_level = 0}));
@@ -115,9 +114,8 @@ TEST(PassableTerrainAt, FalseOutsideTheMap) {
         systems::PassableTerrainAt(registry, {.coord = {.x = 10, .y = 5}, .map_level = 0}));
 }
 
-TEST(PassableTerrainAt, IgnoresCreaturesStandingThere) {
+TEST(PassableTerrainAt, IgnoresCreatures) {
     auto registry = MakeTestRegistry();
-    MakeCreatureAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, /*hp=*/5,
-                   /*is_monster=*/true);
+    MakeCreatureAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}, 5, true);
     EXPECT_TRUE(systems::PassableTerrainAt(registry, {.coord = {.x = 5, .y = 5}, .map_level = 0}));
 }

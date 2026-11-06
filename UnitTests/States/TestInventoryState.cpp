@@ -156,8 +156,7 @@ TEST(InventoryState, MiddleClickOnAnItemRowUsesItAndHealsTheHero) {
     auto hero_id = MakeHero(session);
     session.registry.Storage<component::HealthComponent>().Add(hero_id, {.current = 1, .max = 10});
     session.registry.Storage<component::NameComponent>().Add(hero_id, {.name = "Hero"});
-    auto potion =
-        MakeNamedMagicItem(session, hero_id, "Healing Potion", "healing_light", /*charges=*/1);
+    auto potion = MakeNamedMagicItem(session, hero_id, "Healing Potion", "healing_light", 1);
     game_states::InventoryState state(session);
 
     ui::RenderScene scene;
@@ -184,7 +183,7 @@ TEST(InventoryState, MiddleClickOnAnEquippedStaffCastsWithoutUnequipping) {
     auto session = MakeTestSession();
     auto hero_id = MakeHero(session);
     session.registry.Storage<component::HealthComponent>().Add(hero_id, {.current = 10, .max = 10});
-    auto staff = MakeNamedMagicItem(session, hero_id, "Firestorm Staff", "fireball", /*charges=*/3);
+    auto staff = MakeNamedMagicItem(session, hero_id, "Firestorm Staff", "fireball", 3);
     session.registry.Storage<game_item::EquippedComponent>().Add(
         staff, {.slot = game_item::EquipSlot::MainHand});
     game_states::InventoryState state(session);

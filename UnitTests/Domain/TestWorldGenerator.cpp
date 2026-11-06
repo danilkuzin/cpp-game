@@ -50,11 +50,11 @@ database::GameDatabase MakeDatabase() {
                    .max_hp = 9,
                    .chars = {3, 1, 0, 0, 0},
                    .tile = "../troll.bmp"});
-    auto axe = MakeItemTemplate("axe", "Axe", /*size=*/2, "../axe.bmp");
+    auto axe = MakeItemTemplate("axe", "Axe", 2, "../axe.bmp");
     axe.melee = game_item::MeleeWeaponComponent{.damage = {.count = 1, .sides = 6}};
     axe.value = game_item::ValueComponent{.base_price = 10};
     db.AddItem(axe);
-    auto copper = MakeItemTemplate("copper", "Copper", /*size=*/0, "../copper.bmp");
+    auto copper = MakeItemTemplate("copper", "Copper", 0, "../copper.bmp");
     copper.currency = game_item::CurrencyComponent{.amount = 0};
     db.AddItem(copper);
     return db;
@@ -241,8 +241,8 @@ domain::Config MakeCrowdedConfig(int width) {
 } // namespace
 
 TEST(WorldGenerator, ThrowsRatherThanSilentlyPlacingFewerMonstersThanConfigured) {
-    auto registry = MakeCrowdedWorld(/*width=*/1);
-    auto config = MakeCrowdedConfig(/*width=*/1);
+    auto registry = MakeCrowdedWorld(1);
+    auto config = MakeCrowdedConfig(1);
     auto db = MakeDatabase();
 
     roll::Seed(1U);
@@ -251,8 +251,8 @@ TEST(WorldGenerator, ThrowsRatherThanSilentlyPlacingFewerMonstersThanConfigured)
 }
 
 TEST(WorldGenerator, ThrowsRatherThanSilentlySkippingTheGuaranteedShopkeeper) {
-    auto registry = MakeCrowdedWorld(/*width=*/2);
-    auto config = MakeCrowdedConfig(/*width=*/2);
+    auto registry = MakeCrowdedWorld(2);
+    auto config = MakeCrowdedConfig(2);
     auto db = MakeDatabase();
     db.AddMonster({.id = "shopkeeper",
                    .name = "Shopkeeper",

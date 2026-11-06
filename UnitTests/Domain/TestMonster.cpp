@@ -76,10 +76,10 @@ TEST(Monster, NonShopkeeperPrefabHasNoShopkeeperTag) {
 TEST(Monster, GiveShopkeeperStockAddsPurseAndPricedItems) {
     auto registry = domain::Registry{};
     auto db = database::GameDatabase{};
-    auto axe = MakeItemTemplate("axe_standard", "Axe", /*size=*/2, "../axe.bmp");
+    auto axe = MakeItemTemplate("axe_standard", "Axe", 2, "../axe.bmp");
     axe.value = game_item::ValueComponent{.base_price = 10};
     db.AddItem(axe);
-    auto copper = MakeItemTemplate("copper", "Copper", /*size=*/0, "../copper.bmp");
+    auto copper = MakeItemTemplate("copper", "Copper", 0, "../copper.bmp");
     copper.currency = game_item::CurrencyComponent{};
     db.AddItem(copper);
 
