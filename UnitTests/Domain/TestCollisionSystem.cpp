@@ -5,6 +5,7 @@
 #include "Location.h"
 #include "Registry.h"
 #include "RegistryQueries.h"
+#include "Support/Fixtures.h"
 #include "Support/MakeRegistry.h"
 #include "Systems.h"
 #include "Vector2Int.h"
@@ -173,4 +174,18 @@ TEST(CollisionSystem, DoNotCreateMeleeIntentForFriend) {
 
     EXPECT_TRUE(registry.Storage<component::IntentToMove>().Has(monster1_id));
     EXPECT_FALSE(registry.Storage<component::IntentToMelee>().Has(monster1_id));
+}
+
+TEST(OpportunityAttackSystem, AdjacentGetsFreeHit) {
+    auto registry = MakeTestRegistry();
+    auto hero = MakeHeroAt(registry, {.x = 5, .y = 5});
+    registry.Storage<component::IntentToMove>().Add(hero, {.dcoord = Vector2Int::Right()});
+    auto id = MakeCreatureAt(registry, {.coord = {.x = 4, .y = 5}, .map_level = 0}, 1, true);
+    registry.Storage<component::VisionComponent>().Add(id, {.view_zone = 5});
+
+    systems::OpportunityAttackSystem(registry);
+
+    const auto *melee = registry.Storage<component::IntentToMelee>().Get(id);
+    ASSERT_NE(melee, nullptr);
+    EXPECT_EQ(melee->target_entity_id, hero);
 }

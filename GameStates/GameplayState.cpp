@@ -289,6 +289,7 @@ GameState::Result GameplayState::Update() {
                     }
                 }
             }
+            systems::OpportunityAttackSystem(session_.registry);
             auto melee_result = systems::MeleeSystem(session_.registry);
             LogEvents(session_, melee_result);
             auto ranged_result = systems::RangedSystem(session_.registry);

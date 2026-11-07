@@ -42,6 +42,78 @@ void StampDamage(domain::Registry &registry, event::Result &result,
     }
 }
 
+void AISystem(domain::Registry &registry) {
+    auto hero_id = PlayerId(registry);
+    if (hero_id == std::nullopt) {
+        return;
+    }
+
+    const auto &hero_loc = registry.GetRef<Location>(hero_id.value());
+
+    auto dmap = BuildDistanceMap(registry, hero_loc);
+    for (auto id : registry.View<component::MonsterTag, Location, component::VisionComponent>()) {
+        if (registry.Storage<component::ShopkeeperTag>().Has(id)) {
+            continue;
+        }
+        auto &monster_loc = registry.GetRef<Location>(id);
+        auto &monster_vision = registry.GetRef<component::VisionComponent>(id);
+
+        if (monster_loc.map_level != hero_loc.map_level) {
+            continue;
+        }
+        if (monster_loc.coord.DistanceTo(hero_loc.coord) > monster_vision.view_zone) {
+            continue;
+        }
+        std::vector<Vector2Int> best_directions = {};
+        int best_potential_distance = 0;
+        for (auto cardinal : Vector2Int::Cardinals()) {
+            auto candidate_distance = dmap.At(monster_loc.coord + cardinal);
+            if (!candidate_distance.has_value()) {
+                continue;
+            }
+            if (best_directions.empty() || *candidate_distance < best_potential_distance) {
+                best_directions.clear();
+                best_directions.push_back(cardinal);
+                best_potential_distance = *candidate_distance;
+            } else if (*candidate_distance == best_potential_distance) {
+                best_directions.push_back(cardinal);
+            }
+        }
+        if (!best_directions.empty()) {
+            auto chosen_dir = best_directions[0];
+            auto num_candidate_directions = best_directions.size();
+            if (num_candidate_directions > 1) {
+                chosen_dir =
+                    best_directions[roll::Index(static_cast<int>(num_candidate_directions))];
+            }
+            registry.Storage<component::IntentToMove>().Add(id, {.dcoord = chosen_dir});
+        }
+    }
+}
+
+event::Result CollisionSystem(domain::Registry &registry) {
+    event::Result result{};
+    for (auto id : registry.View<component::IntentToMove, Location>()) {
+        auto &intent = registry.GetRef<component::IntentToMove>(id);
+        auto &location = registry.GetRef<Location>(id);
+
+        auto target_entities = EntitiesAt(registry, location + intent.dcoord);
+        for (auto target_entity : target_entities) {
+            if (registry.Storage<component::ShopkeeperTag>().Has(target_entity) &&
+                registry.Storage<component::PlayerTag>().Has(id)) {
+                registry.Storage<component::IntentToMove>().Remove(id);
+                result.events.push_back(
+                    {.type = event::Type::Trade, .attacker = id, .defender = target_entity});
+            } else if (AreEnemies(registry, target_entity, id)) {
+                registry.Storage<component::IntentToMelee>().Add(
+                    id, {.target_entity_id = target_entity});
+                registry.Storage<component::IntentToMove>().Remove(id);
+            }
+        }
+    }
+    return result;
+}
+
 event::Result MeleeSystem(domain::Registry &registry) {
     event::Result result{};
 
@@ -75,6 +147,113 @@ event::Result MeleeSystem(domain::Registry &registry) {
     registry.Storage<component::IntentToMelee>().Clear();
 
     return result;
+}
+
+namespace {
+void ResolveTrapEncounter(domain::Registry &registry, event::Result &result, entity::EntityId id,
+                          Location loc) {
+
+    entity::EntityId trap_id = 0;
+    map::TrapComponent *trap = nullptr;
+    for (auto ent_id : systems::EntitiesAt(registry, loc)) {
+        if (registry.Storage<map::TrapComponent>().Has(ent_id)) {
+            trap = registry.Storage<map::TrapComponent>().Get(ent_id);
+            if (!trap->active) {
+                return;
+            }
+            trap_id = ent_id;
+            break;
+        }
+    }
+    if (trap_id == 0) {
+        return;
+    }
+
+    auto *skills = registry.Storage<hero::HeroSkills>().Get(id);
+    const bool disarmed =
+        skills != nullptr &&
+        roll::SkillCheck(skills->skills[static_cast<std::size_t>(hero::Skill::TrapSearch)],
+                         trap->difficulty);
+    if (disarmed) {
+        leveling::TrySkillGrowth(*skills, hero::Skill::TrapSearch);
+        result.events.push_back(event::Event{.type = event::Type::TrapDisarmed, .defender = id});
+    } else {
+        auto *health = registry.Storage<component::HealthComponent>().Get(id);
+        auto trap_damage = map::TrapDamage(health->max);
+        // No deaths from traps
+        trap_damage = std::min(trap_damage, std::max(0, health->current - 1));
+        StampDamage(registry, result, std::nullopt, id, trap_damage, event::Type::TrapDamage);
+    }
+    trap->active = false;
+}
+
+void ResolveHealingSource(domain::Registry &registry, entity::EntityId id, Location loc) {
+    entity::EntityId healing_source_id = 0;
+    const map::HealingSourceComponent *healing_source = nullptr;
+    for (auto ent_id : systems::EntitiesAt(registry, loc)) {
+        if (registry.Storage<map::HealingSourceComponent>().Has(ent_id)) {
+            healing_source = registry.Storage<map::HealingSourceComponent>().Get(ent_id);
+            healing_source_id = ent_id;
+            break;
+        }
+    }
+    if (healing_source_id == 0) {
+        return;
+    }
+    registry.Storage<component::IntentToHeal>().Add(id, {.amount = healing_source->amount});
+    registry.DestroyEntity(healing_source_id);
+}
+} // namespace
+
+event::Result MovementSystem(domain::Registry &registry) {
+    event::Result result{};
+    for (auto id : registry.View<component::IntentToMove, Location>()) {
+        auto &intent = registry.GetRef<component::IntentToMove>(id);
+        const auto &location = registry.GetRef<Location>(id);
+
+        auto &map = registry.maps[location.map_level];
+
+        bool moved = false;
+        const Location new_loc = location + intent.dcoord;
+
+        if (CanEnter(registry, new_loc)) {
+            registry.PlaceEntity(id, new_loc);
+            moved = true;
+
+            if (registry.Storage<component::PlayerTag>().Has(id)) {
+                auto &vision = registry.GetRef<component::VisionComponent>(id);
+                map.SetAreaVisible(hero::GetVisibleArea(new_loc, vision.view_zone));
+                ResolveTrapEncounter(registry, result, id, new_loc);
+                ResolveHealingSource(registry, id, new_loc);
+            }
+        }
+
+        if (!moved && registry.Storage<component::PlayerTag>().Has(id)) {
+            result.events.push_back(event::Event{.type = event::Type::Blocked, .attacker = id});
+        }
+    }
+    registry.Storage<component::IntentToMove>().Clear();
+    return result;
+}
+
+void OpportunityAttackSystem(domain::Registry &registry) {
+    for (auto hero_id : registry.View<component::PlayerTag, component::IntentToMove, Location>()) {
+        auto &hero_location = registry.GetRef<Location>(hero_id);
+        auto &intent = registry.GetRef<component::IntentToMove>(hero_id);
+        if (!CanEnter(registry, hero_location + intent.dcoord)) {
+            continue;
+        }
+        for (auto monster_id :
+             registry.View<component::MonsterTag, component::VisionComponent, Location>()) {
+            auto &monster_location = registry.GetRef<Location>(monster_id);
+            if ((hero_location.map_level == monster_location.map_level) &&
+                (monster_location.coord.DistanceTo(hero_location.coord) == 1) &&
+                AreEnemies(registry, monster_id, hero_id)) {
+                registry.Storage<component::IntentToMelee>().Add(monster_id,
+                                                                 {.target_entity_id = hero_id});
+            }
+        }
+    }
 }
 
 namespace {
@@ -212,165 +391,6 @@ event::Result SpellSystem(domain::Registry &registry, const database::GameDataba
 
     registry.Storage<component::IntentToCastSpell>().Clear();
 
-    return result;
-}
-
-namespace {
-void ResolveTrapEncounter(domain::Registry &registry, event::Result &result, entity::EntityId id,
-                          Location loc) {
-
-    entity::EntityId trap_id = 0;
-    map::TrapComponent *trap = nullptr;
-    for (auto ent_id : systems::EntitiesAt(registry, loc)) {
-        if (registry.Storage<map::TrapComponent>().Has(ent_id)) {
-            trap = registry.Storage<map::TrapComponent>().Get(ent_id);
-            if (!trap->active) {
-                return;
-            }
-            trap_id = ent_id;
-            break;
-        }
-    }
-    if (trap_id == 0) {
-        return;
-    }
-
-    auto *skills = registry.Storage<hero::HeroSkills>().Get(id);
-    const bool disarmed =
-        skills != nullptr &&
-        roll::SkillCheck(skills->skills[static_cast<std::size_t>(hero::Skill::TrapSearch)],
-                         trap->difficulty);
-    if (disarmed) {
-        leveling::TrySkillGrowth(*skills, hero::Skill::TrapSearch);
-        result.events.push_back(event::Event{.type = event::Type::TrapDisarmed, .defender = id});
-    } else {
-        auto *health = registry.Storage<component::HealthComponent>().Get(id);
-        auto trap_damage = map::TrapDamage(health->max);
-        // No deaths from traps
-        trap_damage = std::min(trap_damage, std::max(0, health->current - 1));
-        StampDamage(registry, result, std::nullopt, id, trap_damage, event::Type::TrapDamage);
-    }
-    trap->active = false;
-}
-
-void ResolveHealingSource(domain::Registry &registry, entity::EntityId id, Location loc) {
-    entity::EntityId healing_source_id = 0;
-    const map::HealingSourceComponent *healing_source = nullptr;
-    for (auto ent_id : systems::EntitiesAt(registry, loc)) {
-        if (registry.Storage<map::HealingSourceComponent>().Has(ent_id)) {
-            healing_source = registry.Storage<map::HealingSourceComponent>().Get(ent_id);
-            healing_source_id = ent_id;
-            break;
-        }
-    }
-    if (healing_source_id == 0) {
-        return;
-    }
-    registry.Storage<component::IntentToHeal>().Add(id, {.amount = healing_source->amount});
-    registry.DestroyEntity(healing_source_id);
-}
-} // namespace
-
-event::Result MovementSystem(domain::Registry &registry) {
-    event::Result result{};
-    for (auto id : registry.View<component::IntentToMove, Location>()) {
-        auto &intent = registry.GetRef<component::IntentToMove>(id);
-        const auto &location = registry.GetRef<Location>(id);
-
-        auto &map = registry.maps[location.map_level];
-
-        bool moved = false;
-        const Location new_loc = location + intent.dcoord;
-
-        if (CanEnter(registry, new_loc)) {
-            registry.PlaceEntity(id, new_loc);
-            moved = true;
-
-            if (registry.Storage<component::PlayerTag>().Has(id)) {
-                auto &vision = registry.GetRef<component::VisionComponent>(id);
-                map.SetAreaVisible(hero::GetVisibleArea(new_loc, vision.view_zone));
-                ResolveTrapEncounter(registry, result, id, new_loc);
-                ResolveHealingSource(registry, id, new_loc);
-            }
-        }
-
-        if (!moved && registry.Storage<component::PlayerTag>().Has(id)) {
-            result.events.push_back(event::Event{.type = event::Type::Blocked, .attacker = id});
-        }
-    }
-    registry.Storage<component::IntentToMove>().Clear();
-    return result;
-}
-
-void AISystem(domain::Registry &registry) {
-    auto hero_id = PlayerId(registry);
-    if (hero_id == std::nullopt) {
-        return;
-    }
-
-    const auto &hero_loc = registry.GetRef<Location>(hero_id.value());
-
-    auto dmap = BuildDistanceMap(registry, hero_loc);
-    for (auto id : registry.View<component::MonsterTag, Location, component::VisionComponent>()) {
-        if (registry.Storage<component::ShopkeeperTag>().Has(id)) {
-            continue;
-        }
-        auto &monster_loc = registry.GetRef<Location>(id);
-        auto &monster_vision = registry.GetRef<component::VisionComponent>(id);
-
-        if (monster_loc.map_level != hero_loc.map_level) {
-            continue;
-        }
-        if (monster_loc.coord.DistanceTo(hero_loc.coord) > monster_vision.view_zone) {
-            continue;
-        }
-        std::vector<Vector2Int> best_directions = {};
-        int best_potential_distance = 0;
-        for (auto cardinal : Vector2Int::Cardinals()) {
-            auto candidate_distance = dmap.At(monster_loc.coord + cardinal);
-            if (!candidate_distance.has_value()) {
-                continue;
-            }
-            if (best_directions.empty() || *candidate_distance < best_potential_distance) {
-                best_directions.clear();
-                best_directions.push_back(cardinal);
-                best_potential_distance = *candidate_distance;
-            } else if (*candidate_distance == best_potential_distance) {
-                best_directions.push_back(cardinal);
-            }
-        }
-        if (!best_directions.empty()) {
-            auto chosen_dir = best_directions[0];
-            auto num_candidate_directions = best_directions.size();
-            if (num_candidate_directions > 1) {
-                chosen_dir =
-                    best_directions[roll::Index(static_cast<int>(num_candidate_directions))];
-            }
-            registry.Storage<component::IntentToMove>().Add(id, {.dcoord = chosen_dir});
-        }
-    }
-}
-
-event::Result CollisionSystem(domain::Registry &registry) {
-    event::Result result{};
-    for (auto id : registry.View<component::IntentToMove, Location>()) {
-        auto &intent = registry.GetRef<component::IntentToMove>(id);
-        auto &location = registry.GetRef<Location>(id);
-
-        auto target_entities = EntitiesAt(registry, location + intent.dcoord);
-        for (auto target_entity : target_entities) {
-            if (registry.Storage<component::ShopkeeperTag>().Has(target_entity) &&
-                registry.Storage<component::PlayerTag>().Has(id)) {
-                registry.Storage<component::IntentToMove>().Remove(id);
-                result.events.push_back(
-                    {.type = event::Type::Trade, .attacker = id, .defender = target_entity});
-            } else if (AreEnemies(registry, target_entity, id)) {
-                registry.Storage<component::IntentToMelee>().Add(
-                    id, {.target_entity_id = target_entity});
-                registry.Storage<component::IntentToMove>().Remove(id);
-            }
-        }
-    }
     return result;
 }
 
